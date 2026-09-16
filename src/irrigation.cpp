@@ -1,6 +1,8 @@
 #include "irrigation.h"
 
-static uint8_t relay_pin = 7;
+#include "config.h"
+
+static uint8_t relay_pin = config::RELAY_PIN;
 static bool relay_on = false;
 
 void irrigation_init(uint8_t pin) {
@@ -10,6 +12,10 @@ void irrigation_init(uint8_t pin) {
 }
 
 void irrigation_start() {
+  if (relay_on) {
+    return;
+  }
+
   digitalWrite(relay_pin, HIGH);
   relay_on = true;
 }
