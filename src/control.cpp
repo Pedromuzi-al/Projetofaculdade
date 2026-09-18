@@ -4,6 +4,9 @@
 
 namespace {
 static constexpr uint8_t SENSOR_SAMPLE_COUNT = 5;
+static constexpr uint8_t SENSOR_CONNECTION_CHECK_SAMPLES = 10;
+static constexpr uint16_t SENSOR_FLOATING_MIN_ADC = 5;
+static constexpr uint16_t SENSOR_FLOATING_MAX_ADC = 1018;
 
 uint8_t sensor_pin = config::SOIL_SENSOR_PIN;
 
@@ -17,6 +20,10 @@ uint16_t read_sensor_average() {
 
   return static_cast<uint16_t>(sum / SENSOR_SAMPLE_COUNT);
 }
+
+bool is_sensor_reading_plausible(uint16_t adc) {
+  return adc >= SENSOR_FLOATING_MIN_ADC && adc <= SENSOR_FLOATING_MAX_ADC;
+}
 }  // namespace
 
 void control_init(uint8_t soil_sensor_pin) {
@@ -28,8 +35,39 @@ bool control_is_sensor_initialized() {
   return sensor_pin != 255;
 }
 
-uint8_t control_read_soil_percent() {
+bool control_is_sensor_connected() {
   if (!control_is_sensor_initialized()) {
+    return false;
+  }
+
+  uint16_t min_adc = UINT16_MAX;
+  uint16_t max_adc = 0;
+  uint32_t sum = 0;
+
+  for (uint8_t i = 0; i < SENSOR_CONNECTION_CHECK_SAMPLES; ++i) {
+    const uint16_t adc = analogRead(sensor_pin);
+    min_adc = min(min_adc, adc);
+    max_adc = max(max_adc, adc);
+    sum += adc;
+    delay(10);
+  }
+
+  const uint16_t average_adc = static_cast<uint16_t>(sum / SENSOR_CONNECTION_CHECK_SAMPLES);
+  const uint16_t span = max_adc - min_adc;
+
+  if (!is_sensor_reading_plausible(average_adc)) {
+    return false;
+  }
+
+  if (span > 900) {
+    return false;
+  }
+
+  return true;
+}
+
+uint8_t control_read_soil_percent() {
+  if (!control_is_sensor_initialized() || !control_is_sensor_connected()) {
     return 0;
   }
 
