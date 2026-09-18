@@ -56,18 +56,18 @@ void brain_init(uint8_t relay_pin, uint8_t soil_sensor_pin) {
 }
 
 void brain_loop() {
-  uint8_t humidity = control_read_soil_percent();
-
-  Serial.print("Umidade=");
-  Serial.print(humidity);
-  Serial.println("%");
-
-  if (!control_is_sensor_initialized()) {
+  if (!control_is_sensor_initialized() || !control_is_sensor_connected()) {
     Serial.println("Falha no sensor: irrigacao segura OFF");
     irrigation_stop();
     session = {false, 0, IrrigationState::Idle, 0};
     return;
   }
+
+  uint8_t humidity = control_read_soil_percent();
+
+  Serial.print("Umidade=");
+  Serial.print(humidity);
+  Serial.println("%");
 
   if (!session.active) {
     if (humidity < config::START_IRRIGATION_PERCENT) {
