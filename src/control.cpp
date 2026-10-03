@@ -66,27 +66,49 @@ bool control_is_sensor_connected() {
   return true;
 }
 
-uint8_t control_read_soil_percent() {
+uint8_t control_read_soil_percent(uint16_t* adc_out) {
   if (!control_is_sensor_initialized() || !control_is_sensor_connected()) {
+    if (adc_out != nullptr) {
+      *adc_out = 0;
+    }
     return 0;
   }
 
-  uint16_t adc = read_sensor_average();
+  const uint16_t adc = read_sensor_average();
+  if (adc_out != nullptr) {
+    *adc_out = adc;
+  }
+
   const uint16_t dry_adc = config::SENSOR_DRY_ADC;
   const uint16_t wet_adc = config::SENSOR_WET_ADC;
 
-  if (wet_adc <= dry_adc) {
+  if (wet_adc == dry_adc) {
     return 0;
   }
 
-  if (adc <= dry_adc) {
+  if (dry_adc < wet_adc) {
+    if (adc <= dry_adc) {
+      return 0;
+    }
+
+    if (adc >= wet_adc) {
+      return 100;
+    }
+
+    const uint32_t percent =
+        (static_cast<uint32_t>(adc - dry_adc) * 100UL) / (wet_adc - dry_adc);
+    return static_cast<uint8_t>(percent);
+  }
+
+  if (adc >= dry_adc) {
     return 0;
   }
 
-  if (adc >= wet_adc) {
+  if (adc <= wet_adc) {
     return 100;
   }
 
-  uint32_t percent = ((uint32_t)(adc - dry_adc) * 100UL) / (wet_adc - dry_adc);
-  return static_cast<uint8_t>(min(static_cast<uint32_t>(100), percent));
+  const uint32_t percent =
+      (static_cast<uint32_t>(dry_adc - adc) * 100UL) / (dry_adc - wet_adc);
+  return static_cast<uint8_t>(percent);
 }

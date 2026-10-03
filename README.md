@@ -16,13 +16,28 @@ Projeto migrado para PlatformIO usando Arduino Uno e framework Arduino.
 - Ao chegar em 60% de umidade: encerra a irrigacao.
 - Limite de seguranca: 20 pulsos.
 
+## Diagnostico do rele
+
+Com a bomba desconectada do modulo rele, envie `T` pelo monitor serial para
+acionar a saida por 1 segundo. O programa fica em modo de teste, com a saida
+desligada, ate receber `A`, que retoma o modo automatico. Nao envie `T` com a
+bomba conectada: o teste energiza o rele.
+
+O nivel ativo do rele e configurado em `src/config.h` (`RELAY_ACTIVE_LEVEL`).
+O padrao `HIGH` preserva o comportamento anterior. Alguns modulos sao ativos em
+`LOW`; confirme a especificacao do seu modulo antes de alterar essa opcao.
+
 ## Calibracao
 
-Em `src/control.cpp`, ajuste estes valores conforme as leituras reais do seu sensor:
+O monitor serial mostra `ADC=` e `Umidade=`. Em `src/config.h`, ajuste
+`SENSOR_DRY_ADC` e `SENSOR_WET_ADC` usando as leituras ADC reais com o sensor
+seco e molhado, respectivamente:
 
 ```cpp
-static const uint16_t SENSOR_DRY_ADC = 0;
-static const uint16_t SENSOR_WET_ADC = 1023;
+static constexpr uint16_t SENSOR_DRY_ADC = 0;
+static constexpr uint16_t SENSOR_WET_ADC = 1023;
 ```
 
-Se o seu sensor funcionar invertido, ou seja, valor alto quando esta seco e valor baixo quando esta molhado, a conversao em `control_read_soil_percent()` deve ser invertida.
+O programa aceita ADC crescente ou decrescente: se o valor diminuir ao molhar,
+`SENSOR_WET_ADC` deve ser menor que `SENSOR_DRY_ADC`. A umidade exibida deve
+aumentar ao molhar.
