@@ -5,24 +5,22 @@ Projeto migrado para PlatformIO usando Arduino Uno e framework Arduino.
 ## Pinos
 
 - Sensor de umidade: A0
-- Rele da bomba: pino digital 7
+- Rele da bomba: pino A2 (usado como saida digital)
 - Monitor serial: 9600 bps
 
 ## Logica
 
-- Abaixo de 40% de umidade: inicia a irrigacao.
-- A bomba liga em pulsos de 1 segundo.
-- Entre pulsos, o sistema aguarda 5 segundos para a agua penetrar no solo.
-- Ao chegar em 60% de umidade: encerra a irrigacao.
-- Limite de seguranca: 20 pulsos.
+- Abaixo de 40% de umidade: liga a bomba continuamente.
+- Ao chegar a 60% de umidade: desliga a bomba.
+- Entre 40% e 60%, mantem o estado atual da bomba para evitar ligacoes repetidas perto do limite.
 
 ## Calibracao
 
-Em `src/control.cpp`, ajuste estes valores conforme as leituras reais do seu sensor:
+Em `src/config.h`, ajuste estes valores conforme as leituras reais do seu sensor:
 
 ```cpp
-static const uint16_t SENSOR_DRY_ADC = 0;
-static const uint16_t SENSOR_WET_ADC = 1023;
+static constexpr uint16_t SENSOR_DRY_ADC = 680;
+static constexpr uint16_t SENSOR_WET_ADC = 15;
 ```
 
-Se o seu sensor funcionar invertido, ou seja, valor alto quando esta seco e valor baixo quando esta molhado, a conversao em `control_read_soil_percent()` deve ser invertida.
+Neste sensor, o ADC fica alto quando esta seco e baixo quando esta molhado; a conversao aceita essa direcao invertida.

@@ -75,8 +75,21 @@ uint8_t control_read_soil_percent() {
   const uint16_t dry_adc = config::SENSOR_DRY_ADC;
   const uint16_t wet_adc = config::SENSOR_WET_ADC;
 
-  if (wet_adc <= dry_adc) {
+  if (wet_adc == dry_adc) {
     return 0;
+  }
+
+  if (dry_adc > wet_adc) {
+    if (adc >= dry_adc) {
+      return 0;
+    }
+
+    if (adc <= wet_adc) {
+      return 100;
+    }
+
+    uint32_t percent = ((uint32_t)(dry_adc - adc) * 100UL) / (dry_adc - wet_adc);
+    return static_cast<uint8_t>(min(static_cast<uint32_t>(100), percent));
   }
 
   if (adc <= dry_adc) {

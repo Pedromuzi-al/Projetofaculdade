@@ -16,12 +16,12 @@ void irrigation_start() {
     return;
   }
 
-  digitalWrite(relay_pin, HIGH);
+  digitalWrite(relay_pin, LOW);
   relay_on = true;
 }
 
 void irrigation_stop() {
-  digitalWrite(relay_pin, LOW);
+  digitalWrite(relay_pin, HIGH);
   relay_on = false;
 }
 
