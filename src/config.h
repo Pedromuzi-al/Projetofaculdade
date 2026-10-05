@@ -10,9 +10,7 @@ static constexpr uint8_t RELAY_ACTIVE_LEVEL = HIGH;
 
 static constexpr uint8_t START_IRRIGATION_PERCENT = 40;
 static constexpr uint8_t STOP_IRRIGATION_PERCENT = 60;
-static constexpr unsigned long IRRIGATION_PULSE_MS = 1000;
-static constexpr unsigned long IRRIGATION_PAUSE_MS = 5000;
-static constexpr uint8_t MAX_IRRIGATION_PULSES = 20;
+static constexpr unsigned long RELAY_TEST_DURATION_MS = 1000;
 
 static constexpr uint16_t SENSOR_DRY_ADC = 671;
 static constexpr uint16_t SENSOR_WET_ADC = 18;

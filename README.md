@@ -11,10 +11,8 @@ Projeto migrado para PlatformIO usando Arduino Uno e framework Arduino.
 ## Logica
 
 - Abaixo de 40% de umidade: inicia a irrigacao.
-- A bomba liga em pulsos de 1 segundo.
-- Entre pulsos, o sistema aguarda 5 segundos para a agua penetrar no solo.
+- A bomba permanece ligada continuamente durante a irrigacao.
 - Ao chegar em 60% de umidade: encerra a irrigacao.
-- Limite de seguranca: 20 pulsos.
 
 ## Diagnostico do rele
 
