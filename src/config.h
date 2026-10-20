@@ -4,9 +4,9 @@
 #include <Arduino.h>
 
 namespace config {
-static constexpr uint8_t RELAY_PIN = 7;
+static constexpr uint8_t RELAY_PIN = A2;
 static constexpr uint8_t SOIL_SENSOR_PIN = A0;
-static constexpr uint8_t RELAY_ACTIVE_LEVEL = HIGH;
+static constexpr uint8_t RELAY_ACTIVE_LEVEL = LOW;
 
 static constexpr uint8_t START_IRRIGATION_PERCENT = 40;
 static constexpr uint8_t STOP_IRRIGATION_PERCENT = 60;

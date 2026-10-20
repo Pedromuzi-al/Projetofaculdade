@@ -5,7 +5,7 @@ Projeto migrado para PlatformIO usando Arduino Uno e framework Arduino.
 ## Pinos
 
 - Sensor de umidade: A0
-- Rele da bomba: pino digital 7
+- Rele da bomba: pino A2 (usado como saida digital)
 - Monitor serial: 9600 bps
 
 ## Logica
@@ -22,8 +22,8 @@ desligada, ate receber `A`, que retoma o modo automatico. Nao envie `T` com a
 bomba conectada: o teste energiza o rele.
 
 O nivel ativo do rele e configurado em `src/config.h` (`RELAY_ACTIVE_LEVEL`).
-O padrao `HIGH` preserva o comportamento anterior. Alguns modulos sao ativos em
-`LOW`; confirme a especificacao do seu modulo antes de alterar essa opcao.
+Para o modulo usado neste sistema, configure `LOW` para ligar e `HIGH` para
+desligar. Se trocar o modulo, confirme a polaridade antes de alterar essa opcao.
 
 ## Calibracao
 
