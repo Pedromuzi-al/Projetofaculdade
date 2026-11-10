@@ -8,7 +8,7 @@ static constexpr uint8_t SENSOR_CONNECTION_CHECK_SAMPLES = 10;
 static constexpr uint16_t SENSOR_FLOATING_MIN_ADC = 5;
 static constexpr uint16_t SENSOR_FLOATING_MAX_ADC = 1018;
 
-uint8_t sensor_pin = config::SOIL_SENSOR_PIN;
+uint8_t sensor_pin = 255;
 
 uint16_t read_sensor_average() {
   uint32_t sum = 0;
@@ -66,7 +66,10 @@ bool control_is_sensor_connected() {
   return true;
 }
 
-uint8_t control_read_soil_percent() {
+uint8_t control_read_soil_percent(uint16_t* adc_out) {
+  if (adc_out != nullptr) {
+    *adc_out = UINT16_MAX;
+  }
   if (!control_is_sensor_initialized() || !control_is_sensor_connected()) {
     return 0;
   }
@@ -75,31 +78,16 @@ uint8_t control_read_soil_percent() {
   const uint16_t dry_adc = config::SENSOR_DRY_ADC;
   const uint16_t wet_adc = config::SENSOR_WET_ADC;
 
-  if (wet_adc == dry_adc) {
+  if (wet_adc == dry_adc || !is_sensor_reading_plausible(adc)) {
     return 0;
   }
 
-  if (dry_adc > wet_adc) {
-    if (adc >= dry_adc) {
-      return 0;
-    }
-
-    if (adc <= wet_adc) {
-      return 100;
-    }
-
-    uint32_t percent = ((uint32_t)(dry_adc - adc) * 100UL) / (dry_adc - wet_adc);
-    return static_cast<uint8_t>(min(static_cast<uint32_t>(100), percent));
+  if (adc_out != nullptr) {
+    *adc_out = adc;
   }
 
-  if (adc <= dry_adc) {
-    return 0;
-  }
-
-  if (adc >= wet_adc) {
-    return 100;
-  }
-
-  uint32_t percent = ((uint32_t)(adc - dry_adc) * 100UL) / (wet_adc - dry_adc);
-  return static_cast<uint8_t>(min(static_cast<uint32_t>(100), percent));
+  // Signed arithmetic supports sensors whose ADC falls as moisture increases.
+  const long percent = (static_cast<long>(adc) - dry_adc) * 100L /
+                       (static_cast<long>(wet_adc) - dry_adc);
+  return static_cast<uint8_t>(constrain(percent, 0L, 100L));
 }
