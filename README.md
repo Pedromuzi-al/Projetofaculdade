@@ -9,6 +9,47 @@ Projeto migrado para PlatformIO usando Arduino Uno e framework Arduino.
 - VCC dos dois modulos: 5V; GND comum com o Arduino
 - Monitor serial: 9600 bps
 
+## Ligacao da bateria e da bomba
+
+Para uma bomba DC alimentada por bateria e um modulo rele com contatos COM,
+NO/NA e NC/NF, o rele deve interromper o caminho da corrente da bomba:
+
+```text
+Bateria (+) ---- COM do rele
+                 NO/NA do rele ---- Bomba (+)
+Bateria (-) ----------------------- Bomba (-)
+```
+
+- COM: contato comum.
+- NO/NA: normalmente aberto; conecta ao COM quando o rele e acionado.
+- NC/NF: normalmente fechado; deixar sem fio nesta montagem.
+- Use as marcacoes do modulo para identificar os bornes; a ordem fisica varia.
+- Nao mantenha outro fio ligando diretamente bateria (+) a bomba (+), pois isso
+  contorna o rele e mantem a bomba ligada mesmo com o comando OFF.
+- A bateria alimenta a bomba; VCC, GND e IN do modulo servem ao controle do rele.
+  Os contatos COM/NO nao fornecem energia por conta propria.
+- A tensao da bateria deve ser compativel com a bomba, e os contatos do rele
+  devem suportar a tensao e a corrente DC do motor, incluindo a partida.
+
+Referencia sobre os contatos: [guia de reles da Seeed Studio](https://wiki.seeedstudio.com/Seeed_Relay_Page/).
+
+Desconecte a bateria e a alimentacao do Arduino antes de alterar os fios.
+
+### Verificacao na montagem
+
+1. Confira a ligacao acima e os pinos de controle indicados em **Pinos**.
+2. Ligue o sistema e abra o monitor serial em 9600 bps.
+3. Abaixo de 40%, deve aparecer `Irrigacao: ON` e a bomba deve funcionar.
+4. Ao chegar em 60%, deve aparecer `Irrigacao: OFF (60% atingidos)` e o motor
+   da bomba deve parar mesmo com a bateria conectada.
+5. Se o motor continuar girando, verifique fios contornando o rele, uso do borne
+   NC/NF e se os contatos realmente abrem. O LED, o clique e as mensagens no
+   serial nao comprovam que a alimentacao da bomba foi interrompida.
+
+O firmware esta configurado para modulo **ativo em LOW**: A0 em LOW aciona;
+A0 em HIGH desaciona. Confirme essa caracteristica no seu modulo antes de
+alterar `RELAY_ACTIVE_LEVEL` em `src/config.h`.
+
 ## Logica
 
 - Abaixo de 40% de umidade: inicia a irrigacao.
