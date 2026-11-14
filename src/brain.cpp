@@ -10,9 +10,6 @@ struct IrrigationSession {
 };
 
 IrrigationSession session = {false};
-bool relay_test_mode = false;
-bool relay_test_pulse_active = false;
-unsigned long relay_test_started_ms = 0;
 
 void stop_session() {
   session.active = false;
@@ -25,65 +22,29 @@ void start_session() {
   irrigation_start();
   Serial.println("Irrigacao: ON");
 }
-
-void process_serial_commands() {
-  while (Serial.available() > 0) {
-    const char command = Serial.read();
-    if (command == 'T' || command == 't') {
-      session = {false};
-      irrigation_stop();
-      relay_test_mode = true;
-      relay_test_pulse_active = true;
-      relay_test_started_ms = millis();
-      irrigation_start();
-      Serial.println("TESTE: rele ON por 1s; desconecte a bomba antes do teste");
-    } else if (command == 'A' || command == 'a') {
-      if (relay_test_pulse_active) {
-        irrigation_stop();
-      }
-      relay_test_mode = false;
-      relay_test_pulse_active = false;
-      session = {false};
-      Serial.println("Modo automatico ativado");
-    }
-  }
-}
 }  // namespace
 
 void brain_init(uint8_t relay_pin, uint8_t soil_sensor_pin) {
   control_init(soil_sensor_pin);
   irrigation_init(relay_pin);
   session = {false};
-  relay_test_mode = false;
-  relay_test_pulse_active = false;
-  relay_test_started_ms = 0;
 
   Serial.println("Irrigador iniciado");
+  Serial.print("Pinos: rele=A0 (ativo LOW), sensor=A3; calibracao seco=");
+  Serial.print(config::SENSOR_DRY_ADC);
+  Serial.print(", molhado=");
+  Serial.println(config::SENSOR_WET_ADC);
 }
 
 void brain_loop() {
-  process_serial_commands();
-
-  if (relay_test_pulse_active &&
-      millis() - relay_test_started_ms >= config::RELAY_TEST_DURATION_MS) {
-    irrigation_stop();
-    relay_test_pulse_active = false;
-    Serial.println("TESTE: rele OFF");
-  }
-
-  if (relay_test_mode) {
-    return;
-  }
-
-  if (!control_is_sensor_initialized() || !control_is_sensor_connected()) {
+  uint16_t sensor_adc = UINT16_MAX;
+  const uint8_t humidity = control_read_soil_percent(&sensor_adc);
+  if (sensor_adc == UINT16_MAX) {
     Serial.println("Falha no sensor: irrigacao segura OFF");
     irrigation_stop();
     session = {false};
     return;
   }
-
-  uint16_t sensor_adc = 0;
-  uint8_t humidity = control_read_soil_percent(&sensor_adc);
 
   Serial.print("ADC=");
   Serial.print(sensor_adc);
@@ -91,19 +52,17 @@ void brain_loop() {
   Serial.print("Umidade=");
   Serial.print(humidity);
   Serial.println("%");
-
-  if (humidity >= config::STOP_IRRIGATION_PERCENT) {
-    if (session.active) {
-      stop_session();
-    } else {
-      irrigation_stop();
-    }
-    return;
-  }
+  Serial.print("Rele antes da decisao: ");
+  Serial.println(irrigation_is_on() ? "ON" : "OFF");
 
   if (!session.active) {
     if (humidity < config::START_IRRIGATION_PERCENT) {
       start_session();
     }
+    return;
+  }
+
+  if (humidity >= config::STOP_IRRIGATION_PERCENT) {
+    stop_session();
   }
 }

@@ -10,4 +10,5 @@ void setup() {
 
 void loop() {
   brain_loop();
+  delay(500);
 }
